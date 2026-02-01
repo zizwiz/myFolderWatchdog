@@ -3,3 +3,5 @@
 ################################################################################
 
 /myFolderWatchdog/obj/Debug
+/myFolderWatchdog/bin
+/myFolderWatchdog/obj/Release
