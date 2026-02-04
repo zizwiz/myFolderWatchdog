@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,11 +9,6 @@ namespace myFolderWatchdog
 {
     public partial class Form1 : Form
     {
-        private readonly string appProcessName = "YourAppName"; // without .exe
-        private readonly string appExePath = @"C:\Path\To\YourApp.exe";
-        private readonly string baseFolder = @"C:\BaseFolder";
-        private readonly TimeSpan maxAllowedGap = TimeSpan.FromMinutes(5);
-
         public Form1()
         {
             InitializeComponent();
@@ -23,22 +17,33 @@ namespace myFolderWatchdog
         private void Form1_Load(object sender, EventArgs e)
         {
             Text += " : v" + Assembly.GetExecutingAssembly().GetName().Version; // put in the version number
-
-            //timer1.Interval = 30000; // check every 30 seconds
-            //timer1.Tick += Timer1_Tick;
-            //timer1.Start();
-
+            Log("App started: " + DateTime.Now.ToString("HH:mm:ss"));
         }
 
+        private void btn_Start_Click(object sender, EventArgs e)
+        {
+            timer1.Interval = Int32.Parse(numupdn_check_Interval.Text) * 1000; //30000; // check every 30 seconds;
+            timer1.Tick += Timer1_Tick;
+            timer1.Start();
+
+            Log("Watchdog started: " + DateTime.Now.ToString("HH:mm:ss"));
+        }
+
+        private int iterations_counter;
         private void Timer1_Tick(object sender, EventArgs e)
         {
-            try
+            iterations_counter++;
+            // max gap allowed to be missing
+            TimeSpan CheckingInterval = TimeSpan.FromMinutes(int.Parse(numupdwn_Interval.Text));
+
+           try
             {
+                DateTime myDate = DateTime.Now;
                 string todayFolder = Path.Combine(
-                    baseFolder,
-                    DateTime.Now.Year.ToString(),
-                    DateTime.Now.Month.ToString("00"),
-                    DateTime.Now.Day.ToString("00")
+                    txtbx_root_directory.Text.Trim(),
+                    myDate.ToString("yyyy"),
+                    myDate.ToString("MMM"),
+                    myDate.ToString("dd")
                 );
 
                 if (!Directory.Exists(todayFolder))
@@ -54,23 +59,33 @@ namespace myFolderWatchdog
 
                 TimeSpan age = DateTime.Now - newestFile.LastWriteTime;
 
-                if (age > maxAllowedGap)
+                lbl_age.Text = age.ToString();
+                lbl_checking_interval.Text = CheckingInterval.ToString();
+                lbl_iterations.Text = iterations_counter.ToString();
+
+                if (age > CheckingInterval)
                 {
                     RestartApp();
+                    Log("Missing Images: " + DateTime.Now.ToString("HH:mm:ss"));
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Error: " + ex.Message);
+                //Debug.WriteLine("Error: " + ex.Message);
+                Log("Error: " + ex.Message + ": " + DateTime.Now.ToString("HH:mm:ss"));
             }
+
+           if (chkbx_debug.Checked)
+            Log("Watchdog running: " + DateTime.Now.ToString("HH:mm:ss"));
         }
 
         private void RestartApp()
         {
             string processPath = "";
-            
+            int counter = Int32.Parse(lbl_number_of_restarts.Text);
 
-            foreach (var p in Process.GetProcessesByName("myRTSPStreamer"))
+            //if more than one running we close them all
+            foreach (var p in Process.GetProcessesByName(txtbx_app_to_restart.Text.Trim()))
             {
                 processPath = p.MainModule.FileName; //get full path so we can restart it
                 try { p.Kill(); }
@@ -78,10 +93,11 @@ namespace myFolderWatchdog
             }
 
             // Restart it
-            Process.Start(processPath);
+            Process.Start(processPath, "true");
 
+            lbl_number_of_restarts.Text = counter++.ToString();
 
-            
+            Log("Auto restart of locked app: " + DateTime.Now.ToString("HHmmss"));
         }
 
         private void btn_close_Click(object sender, EventArgs e)
@@ -92,6 +108,43 @@ namespace myFolderWatchdog
         private void btn_restart_app_Click(object sender, EventArgs e)
         {
             RestartApp();
+        }
+
+        private void Log(string message)
+        {
+
+            DateTime myDate = DateTime.Now;
+            string FolderPath = Path.Combine(txtbx_root_directory.Text.Trim(), myDate.ToString("yyyy"),
+                myDate.ToString("MMM"), myDate.ToString("dd")); 
+            string timestamp = DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss");
+            string line = $"{timestamp}  {message}";
+
+
+            Directory.CreateDirectory(FolderPath); //create if not already there
+
+            // Write to on-screen log
+            txtbx_Log.AppendText(line + Environment.NewLine);
+
+            // Write to watchdog_log.txt 
+            try
+            {
+                string logPath = Path.Combine(FolderPath, "watchdog_log.txt");
+                File.AppendAllText(logPath, line + Environment.NewLine);
+            }
+            catch
+            {
+                // Avoid crashing if log file fails
+            }
+        }
+
+        private void btn_Stop_Click(object sender, EventArgs e)
+        {
+            timer1.Stop();
+        }
+
+        private void btn_clear_log_Click(object sender, EventArgs e)
+        {
+            txtbx_Log.Clear();
         }
     }
 }
