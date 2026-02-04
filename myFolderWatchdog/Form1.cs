@@ -30,6 +30,7 @@ namespace myFolderWatchdog
         }
 
         private int iterations_counter;
+        private int restart_counter;
         private void Timer1_Tick(object sender, EventArgs e)
         {
             iterations_counter++;
@@ -49,25 +50,24 @@ namespace myFolderWatchdog
                 if (!Directory.Exists(todayFolder))
                     return;
 
-                var newestFile = Directory.GetFiles(todayFolder)
-                    .Select(f => new FileInfo(f))
-                    .OrderByDescending(f => f.LastWriteTime)
-                    .FirstOrDefault();
+               DateTime lastWrite = Directory.GetLastWriteTime(todayFolder);
+               TimeSpan age = DateTime.Now - lastWrite;
 
-                if (newestFile == null)
-                    return;
+               Log("lastWrite = " + lastWrite.ToString());
+               Log("age = " + age.ToString());
 
-                TimeSpan age = DateTime.Now - newestFile.LastWriteTime;
+               lbl_age.Text = age.ToString();
+               lbl_checking_interval.Text = CheckingInterval.ToString();
+               lbl_iterations.Text = iterations_counter.ToString();
+                
 
-                lbl_age.Text = age.ToString();
-                lbl_checking_interval.Text = CheckingInterval.ToString();
-                lbl_iterations.Text = iterations_counter.ToString();
-
-                if (age > CheckingInterval)
+                if (DateTime.Now - lastWrite > CheckingInterval)
                 {
                     RestartApp();
+                    lbl_number_of_restarts.Text = restart_counter++.ToString();
                     Log("Missing Images: " + DateTime.Now.ToString("HH:mm:ss"));
                 }
+
             }
             catch (Exception ex)
             {
