@@ -37,9 +37,10 @@ namespace myFolderWatchdog
             // max gap allowed to be missing
             TimeSpan CheckingInterval = TimeSpan.FromMinutes(int.Parse(numupdwn_Interval.Text));
 
-           try
+            try
             {
                 DateTime myDate = DateTime.Now;
+
                 string todayFolder = Path.Combine(
                     txtbx_root_directory.Text.Trim(),
                     myDate.ToString("yyyy"),
@@ -50,23 +51,24 @@ namespace myFolderWatchdog
                 if (!Directory.Exists(todayFolder))
                     return;
 
-               DateTime lastWrite = Directory.GetLastWriteTime(todayFolder);
-               TimeSpan age = DateTime.Now - lastWrite;
+                todayFolder = "C" + todayFolder.Substring(1) + "\\heartbeat.txt";
 
-               Log("lastWrite = " + lastWrite.ToString());
-               Log("age = " + age.ToString());
+                if (!File.Exists(todayFolder))
+                    return; // or treat as failure
 
-               lbl_age.Text = age.ToString();
-               lbl_checking_interval.Text = CheckingInterval.ToString();
-               lbl_iterations.Text = iterations_counter.ToString();
-                
+                DateTime LastWriteTime = File.GetLastWriteTime(todayFolder);
+                TimeSpan age = DateTime.Now - LastWriteTime;
 
-                if (DateTime.Now - lastWrite > CheckingInterval)
+                if (age > CheckingInterval)
                 {
                     RestartApp();
                     lbl_number_of_restarts.Text = restart_counter++.ToString();
                     Log("Missing Images: " + DateTime.Now.ToString("HH:mm:ss"));
                 }
+                
+                lbl_age.Text = age.ToString();
+                lbl_checking_interval.Text = CheckingInterval.ToString();
+                lbl_iterations.Text = iterations_counter.ToString();
 
             }
             catch (Exception ex)
@@ -75,8 +77,8 @@ namespace myFolderWatchdog
                 Log("Error: " + ex.Message + ": " + DateTime.Now.ToString("HH:mm:ss"));
             }
 
-           if (chkbx_debug.Checked)
-            Log("Watchdog running: " + DateTime.Now.ToString("HH:mm:ss"));
+            if (chkbx_debug.Checked)
+                Log("Watchdog running: " + DateTime.Now.ToString("HH:mm:ss"));
         }
 
         private void RestartApp()
@@ -115,7 +117,7 @@ namespace myFolderWatchdog
 
             DateTime myDate = DateTime.Now;
             string FolderPath = Path.Combine(txtbx_root_directory.Text.Trim(), myDate.ToString("yyyy"),
-                myDate.ToString("MMM"), myDate.ToString("dd")); 
+                myDate.ToString("MMM"), myDate.ToString("dd"));
             string timestamp = DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss");
             string line = $"{timestamp}  {message}";
 
