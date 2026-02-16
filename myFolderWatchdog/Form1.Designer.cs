@@ -230,7 +230,7 @@ namespace myFolderWatchdog
             // lbl_age
             // 
             this.lbl_age.AutoSize = true;
-            this.lbl_age.Location = new System.Drawing.Point(472, 175);
+            this.lbl_age.Location = new System.Drawing.Point(510, 175);
             this.lbl_age.Name = "lbl_age";
             this.lbl_age.Size = new System.Drawing.Size(21, 20);
             this.lbl_age.TabIndex = 38;
@@ -241,14 +241,14 @@ namespace myFolderWatchdog
             this.lbl_Checking.AutoSize = true;
             this.lbl_Checking.Location = new System.Drawing.Point(415, 204);
             this.lbl_Checking.Name = "lbl_Checking";
-            this.lbl_Checking.Size = new System.Drawing.Size(144, 20);
+            this.lbl_Checking.Size = new System.Drawing.Size(90, 20);
             this.lbl_Checking.TabIndex = 39;
-            this.lbl_Checking.Text = "CheckingInterval = ";
+            this.lbl_Checking.Text = "Max Gap = ";
             // 
             // lbl_checking_interval
             // 
             this.lbl_checking_interval.AutoSize = true;
-            this.lbl_checking_interval.Location = new System.Drawing.Point(565, 201);
+            this.lbl_checking_interval.Location = new System.Drawing.Point(510, 204);
             this.lbl_checking_interval.Name = "lbl_checking_interval";
             this.lbl_checking_interval.Size = new System.Drawing.Size(21, 20);
             this.lbl_checking_interval.TabIndex = 40;
@@ -257,7 +257,7 @@ namespace myFolderWatchdog
             // lbl_iterations
             // 
             this.lbl_iterations.AutoSize = true;
-            this.lbl_iterations.Location = new System.Drawing.Point(507, 236);
+            this.lbl_iterations.Location = new System.Drawing.Point(510, 236);
             this.lbl_iterations.Name = "lbl_iterations";
             this.lbl_iterations.Size = new System.Drawing.Size(21, 20);
             this.lbl_iterations.TabIndex = 42;
@@ -366,6 +366,7 @@ namespace myFolderWatchdog
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "myFolderWatchdog";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.numupdwn_Interval)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numupdn_check_Interval)).EndInit();

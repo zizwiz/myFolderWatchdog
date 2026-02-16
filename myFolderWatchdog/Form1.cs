@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace myFolderWatchdog
 {
     public partial class Form1 : Form
     {
-        private int counter = 0;
+        private int counter;
+        private int iterations_counter;
+        private int restart_counter;
+
         public Form1()
         {
             InitializeComponent();
@@ -30,9 +33,8 @@ namespace myFolderWatchdog
             Log("Watchdog started: " + DateTime.Now.ToString("HH:mm:ss"));
         }
 
-        private int iterations_counter;
-        private int restart_counter;
-        private void Timer1_Tick(object sender, EventArgs e)
+
+        private async void Timer1_Tick(object sender, EventArgs e)
         {
             iterations_counter++;
             // max gap allowed to be missing
@@ -51,24 +53,39 @@ namespace myFolderWatchdog
 
                 string todayFile = "C" + todayFolder.Substring(1) + "\\heartbeat.txt";
 
-                if ((!Directory.Exists(todayFolder)) || (!File.Exists(todayFile)))
+                // if ((!Directory.Exists(todayFolder)) || (!File.Exists(todayFile)))
+                //if (!File.Exists(todayFile)) 
+                //{
+                while (!File.Exists(todayFile)) //heartbeat file does not exist yet
                 {
-                    // If watched app has not written file we give it a chance to by waiting a few iterations.
+                    // If watched app has not written file we give it a chance to by waiting up to a minute.
+                    //can happen at change over of day
+
                     counter++; // inc counter
 
                     if (counter > 3)
                     {
                         //Tried more than 3 minutes, watched app must have locked.
                         RestartApp();
+                        Log("Heartbeat file missing");
                         counter = 0; // reset counter
+                        return; // carry on watching
                     }
 
-                    return; // carry on watching
+                    await Task.Delay(30000); //wait 30 seconds
                 }
-                   
-
+                
                 DateTime LastWriteTime = File.GetLastWriteTime(todayFolder);
                 TimeSpan age = DateTime.Now - LastWriteTime;
+
+                if (chkbx_debug.Checked)
+                {
+                    Log("Time Now = " + myDate);
+                    Log("Folder = " + todayFolder);
+                    Log("File = " + todayFile);
+                    Log("Last Write Time = " + LastWriteTime);
+                    Log("Age = " + age);
+                }
 
                 if (age > CheckingInterval)
                 {
@@ -76,7 +93,7 @@ namespace myFolderWatchdog
                     lbl_number_of_restarts.Text = restart_counter++.ToString();
                     Log("Missing Images: " + DateTime.Now.ToString("HH:mm:ss"));
                 }
-                
+
                 lbl_age.Text = age.ToString();
                 lbl_checking_interval.Text = CheckingInterval.ToString();
                 lbl_iterations.Text = iterations_counter.ToString();
@@ -159,6 +176,12 @@ namespace myFolderWatchdog
         {
             txtbx_Log.Clear();
             lbl_iterations.Text = "0";
+            iterations_counter = 0;
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            timer1.Stop();
         }
     }
 }
