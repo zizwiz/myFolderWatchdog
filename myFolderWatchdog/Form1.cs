@@ -9,6 +9,7 @@ namespace myFolderWatchdog
 {
     public partial class Form1 : Form
     {
+        private int counter = 0;
         public Form1()
         {
             InitializeComponent();
@@ -48,13 +49,23 @@ namespace myFolderWatchdog
                     myDate.ToString("dd")
                 );
 
-                if (!Directory.Exists(todayFolder))
-                    return;
+                string todayFile = "C" + todayFolder.Substring(1) + "\\heartbeat.txt";
 
-                todayFolder = "C" + todayFolder.Substring(1) + "\\heartbeat.txt";
+                if ((!Directory.Exists(todayFolder)) || (!File.Exists(todayFile)))
+                {
+                    // If watched app has not written file we give it a chance to by waiting a few iterations.
+                    counter++; // inc counter
 
-                if (!File.Exists(todayFolder))
-                    return; // or treat as failure
+                    if (counter > 3)
+                    {
+                        //Tried more than 3 minutes, watched app must have locked.
+                        RestartApp();
+                        counter = 0; // reset counter
+                    }
+
+                    return; // carry on watching
+                }
+                   
 
                 DateTime LastWriteTime = File.GetLastWriteTime(todayFolder);
                 TimeSpan age = DateTime.Now - LastWriteTime;
@@ -147,6 +158,7 @@ namespace myFolderWatchdog
         private void btn_clear_log_Click(object sender, EventArgs e)
         {
             txtbx_Log.Clear();
+            lbl_iterations.Text = "0";
         }
     }
 }
