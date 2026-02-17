@@ -53,28 +53,27 @@ namespace myFolderWatchdog
 
                 string todayFile = "C" + todayFolder.Substring(1) + "\\heartbeat.txt";
 
-                // if ((!Directory.Exists(todayFolder)) || (!File.Exists(todayFile)))
-                //if (!File.Exists(todayFile)) 
-                //{
-                while (!File.Exists(todayFile)) //heartbeat file does not exist yet
+                while (!File.Exists(todayFile))
                 {
-                    // If watched app has not written file we give it a chance to by waiting up to a minute.
-                    //can happen at change over of day
-
-                    counter++; // inc counter
-
-                    if (counter > 3)
+                    // If watched app has not written file we give it a chance to by waiting up to a 90s.
+                    // can happen at change over of day
+                    
+                    if (counter > 2) // goes round 3 times
                     {
-                        //Tried more than 3 minutes, watched app must have locked.
+                        //Tried more than 90s, watched app must have locked.
                         RestartApp();
                         Log("Heartbeat file missing");
                         counter = 0; // reset counter
                         return; // carry on watching
                     }
 
+                    Log("Heartbeat loop counter = " + counter);
+                    counter++; // inc counter
                     await Task.Delay(30000); //wait 30 seconds
-                }
-                
+                };
+
+                if (File.Exists(todayFile)) counter = 0; // heartbeat file exists so reset counter
+
                 DateTime LastWriteTime = File.GetLastWriteTime(todayFolder);
                 TimeSpan age = DateTime.Now - LastWriteTime;
 
